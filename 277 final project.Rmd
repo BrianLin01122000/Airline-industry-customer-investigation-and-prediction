@@ -1,0 +1,103 @@
+---
+title: "277 custdata"
+output: html_document
+date: "`r Sys.Date()`"
+---
+```{r}
+library(readxl)
+library(cluster)
+library(NbClust)
+
+library(factoextra)
+library("dplyr")
+library(factoextra)
+library(cluster)
+
+install.packages("psych") # -- pair plot, descriptive statistics
+install.packages("sqldf") # -- sql in R
+library("psych")
+library("sqldf")
+```
+
+
+```{r }
+setwd("C:/Users/Brian Lin/Downloads")
+custdata = read.csv("cust_data.csv",header=TRUE, row.names="X")
+cust <- na.omit(custdata)
+head(cust)
+custdis=cust[cust$Customer.Type != 'Loyal Customer', ] 
+head(custdis)
+#table(custdis$Type.of.Travel)
+#table(custdis$Class)
+
+```
+```{r}
+custdis$Travel.Busi <- ifelse(custdis$Type.of.Travel == 'Business travel', 1, 0)
+custdis$Travel.Pers <- ifelse(custdis$Type.of.Travel == "Personal Travel", 1, 0)
+
+custdis$ClassBusi <- ifelse(custdis$Class == "Business", 1, 0)
+custdis$ClassEco <- ifelse(custdis$Class == "Eco", 1, 0)
+custdis$ClassEcoPlus <- ifelse(custdis$Class == "Eco Plus", 1, 0)
+table(custdis$ClassEco)
+
+```
+
+```{r}
+custdis=select(custdis, -c(satisfaction, Customer.Type, Type.of.Travel,Class))
+head(custdis)
+```
+
+
+```{r}
+fviz_nbclust(custdis, kmeans, method = "wss")
+```
+
+
+```{r}
+gap_stat <- clusGap(custdis,
+                    FUN = kmeans,
+                    nstart = 25,
+                    K.max = 10,
+                    B = 50)
+
+#plot number of clusters vs. gap statistic
+fviz_gap_stat(gap_stat)
+```
+
+
+```{r}
+set.seed(1)
+km <- kmeans(custdis, centers = 4, nstart = 25)
+km
+fviz_cluster(km, data = df)
+
+```
+
+```{r}
+custdis_clus=cbind(custdis, cluster=km$cluster)
+write.csv(custdis_clus, "C:/Users/janee/Downloads/custdatadis_cluster.csv", row.names=TRUE)
+head(custdis_clus)
+
+```
+
+```{r}
+stat_all <- describeBy(custdis_clus, custdis_clus$cluster)
+print(stat_all)
+```
+
+
+```{r}
+#final_data <- merge(x=custdata, y=km$cluster,by="row.names",all=T)
+#colnames(final_data)[colnames(final_data) == "y"] ="cluster"
+#head(final_data)
+```
+
+```{r}
+#write.csv(final_data, "C:/Users/janee/Downloads/custdata_cluster.csv", row.names=TRUE)
+```
+
+
+```{r}
+
+```
+

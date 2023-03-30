@@ -1,0 +1,195 @@
+---
+title: "Untitled"
+output: html_document
+date: "`r Sys.Date()`"
+---
+```{r}
+#install.packages("caret")
+library(caret)
+#set.seed(1680) # for reproducibility
+library(dplyr) # for data cleaning
+install.packages("ISLR")
+library(ISLR) # for college dataset
+library(cluster) # for gower similarity and pam
+install.packages("Rtsne")
+library(Rtsne) # for t-SNE plot
+library(ggplot2) # for visualization
+library(readxl)
+library(cluster)
+library(NbClust)
+library(factoextra)
+library("dplyr")
+library(factoextra)
+library(cluster)
+
+install.packages("psych") # -- pair plot, descriptive statistics
+install.packages("sqldf") # -- sql in R
+library("psych")
+library("sqldf")
+library(pROC)
+library(pscl)
+```
+
+```{r}
+df <- read.csv( "C:/Users/Brian Lin/Downloads/custdatadisfull_4cluster.csv")
+df= na.omit(df)
+df=select(df, -c( Gender, Customer.Type, Type.of.Travel,Class))
+head(df)
+```
+
+
+```{r}
+train <- createDataPartition(df$satisfaction, p=0.8, list=FALSE)
+Training <- df[ train, ]
+Testing <- df[ -train, ]
+
+```
+
+
+```{r}
+
+lr <- glm(satisfaction ~ .-cluster , data = Training, 
+           family = "binomial")
+summary(lr)
+
+exp(lr$coefficients)-1
+
+Testing$model_prob <- predict(lr, Testing, type = "response")
+Testing <- Testing  %>% mutate(model_pred = 1*(model_prob > .53) + 0)
+Testing <- Testing %>% mutate(accurate = 1*(model_pred == satisfaction))
+sum(Testing$accurate)/nrow(Testing)
+
+#install.packages("pscl")
+#library(pscl)
+pR2(lr)  # look for 'McFadden'
+varImp(lr)#,scale = FALSE)
+
+library(pROC)
+# Compute AUC for predicting Class with the variable CreditHistory.Critical
+f1 = roc(response=Training$satisfaction, predictor=lr$fitted.values, plot = TRUE)
+
+#predict(lr, newdata=testing)
+#predict(lr, newdata=testing, type="prob")
+```
+
+```{r}
+
+```
+
+
+```{r}
+df1 <- subset(Training, cluster ==1)
+df1_test=subset(Testing, cluster ==1)
+lr1 <- glm(satisfaction ~ .-cluster , data = df1, 
+                    family = "binomial")
+summary(lr1)
+
+exp(lr1$coefficients)-1
+
+df1_test$model_prob <- predict(lr1, df1_test, type = "response")
+df1_test <- df1_test  %>% mutate(model_pred = 1*(model_prob > .50) + 0)
+df1_test <- df1_test %>% mutate(accurate = 1*(model_pred == satisfaction))
+sum(df1_test$accurate)/nrow(df1_test)
+
+pR2(lr1)  # look for 'McFadden'
+varImp(lr1)
+f2 = roc(response=df1$satisfaction, predictor=lr1$fitted.values, plot = TRUE)
+
+```
+```{r}
+summary(lr1)
+varImp(lr1)
+```
+
+
+```{r}
+df2 <- subset(Training, cluster ==2)
+df2_test=subset(Testing, cluster ==2)
+lr2 <- glm(satisfaction ~ .-cluster , data = df2, 
+                    family = "binomial")
+summary(lr2)
+varImp(lr2)
+df2_test$model_prob <- predict(lr2, df2_test, type = "response")
+df2_test <- df2_test  %>% mutate(model_pred = 1*(model_prob > .5) + 0)
+df2_test <- df2_test %>% mutate(accurate = 1*(model_pred == satisfaction))
+sum(df2_test$accurate)/nrow(df2_test)
+
+
+
+pR2(lr2)  # look for 'McFadden'
+varImp(lr2)
+f2 = roc(response=df2$satisfaction, predictor=lr2$fitted.values, plot = TRUE)
+```
+```{r}
+exp(lr2$coefficients)-1
+
+
+```
+
+
+```{r}
+df3 <- subset(Training, cluster ==3)
+df3_test=subset(Testing, cluster ==3)
+lr3 <- glm(satisfaction ~ .-cluster , data = df3, 
+           family = "binomial")
+summary(lr3)
+exp(lr3$coefficients)
+
+df3_test$model_prob <- predict(lr3, df3_test, type = "response")
+df3_test <- df3_test  %>% mutate(model_pred = 1*(model_prob > .5) + 0)
+df3_test <- df3_test %>% mutate(accurate = 1*(model_pred == satisfaction))
+sum(df3_test$accurate)/nrow(df3_test)
+
+pR2(lr3)  # look for 'McFadden'
+varImp(lr3)
+f3 = roc(response=df3$satisfaction, predictor=lr3$fitted.values, auc= TRUE, plot = TRUE)
+```
+
+```{r}
+exp(lr3$coefficients)-1
+```
+
+
+```{r}
+df4 <- subset(Training, cluster ==4)
+df4_test <- subset(Testing, cluster ==4)
+lr4 <- glm(satisfaction ~ .-cluster , data = df4, 
+           family = "binomial")
+summary(lr4)
+exp(lr4$coefficients)-1
+
+df4_test$model_prob <- predict(lr4, df4_test, type = "response")
+df4_test <- df4_test  %>% mutate(model_pred = 1*(model_prob > .5) + 0)
+df4_test <- df4_test %>% mutate(accurate = 1*(model_pred == satisfaction))
+sum(df4_test$accurate)/nrow(df4_test)
+
+
+pR2(lr4)  # look for 'McFadden'
+varImp(lr4)
+f3 = roc(response=df3$satisfaction, predictor=lr3$fitted.values, plot = TRUE)
+```
+
+```{r}
+exp(lr4$coefficients)-1
+```
+
+```{r}
+df4 <- subset(df, cluster ==4)
+df4_test <- subset(df, cluster ==4)
+lr4 <- glm(satisfaction ~ .-cluster , data = df4, 
+           family = "binomial")
+summary(lr4)
+exp(lr4$coefficients)-1
+
+df4_test$model_prob <- predict(lr4, df4_test, type = "response")
+df4_test <- df4_test  %>% mutate(model_pred = 1*(model_prob > .5) + 0)
+df4_test <- df4_test %>% mutate(accurate = 1*(model_pred == satisfaction))
+sum(df4_test$accurate)/nrow(df4_test)
+
+
+pR2(lr4)  # look for 'McFadden'
+varImp(lr4)
+f3 = roc(response=df3$satisfaction, predictor=lr3$fitted.values, plot = TRUE)
+```
+```
+
